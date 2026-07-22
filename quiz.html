@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Subnetting Quiz</title>
+
+  <!-- Put your existing CSS in this file. -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    .quiz-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .quiz-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button,
+    .button-link {
+      display: inline-block;
+      padding: 10px 16px;
+      color: #ffffff;
+      background: #238636;
+      border: 1px solid #2ea043;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button:hover,
+    .button-link:hover {
+      background: #2ea043;
+    }
+
+    button.secondary,
+    .button-link.secondary {
+      background: #21262d;
+      border-color: #3b4552;
+    }
+
+    button.secondary:hover,
+    .button-link.secondary:hover {
+      background: #30363d;
+    }
+
+    button.selected-mode {
+      background: #1f6feb;
+      border-color: #58a6ff;
+    }
+
+    .quiz-description {
+      margin-bottom: 20px;
+      color: var(--muted);
+    }
+
+    .quiz-cidr {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .quiz-cidr input {
+      width: 80px;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .ones-input {
+      width: 75px !important;
+      min-width: 75px !important;
+      padding: 6px !important;
+      text-align: center;
+    }
+
+    .cidr-answer-input {
+      width: 100px !important;
+      min-width: 100px !important;
+      text-align: center;
+    }
+
+    .quiz-feedback {
+      min-height: 28px;
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .quiz-feedback:empty {
+      display: none;
+    }
+
+    .quiz-feedback.correct {
+      color: #7ee787;
+      background: rgba(46, 160, 67, 0.12);
+      border-color: #238636;
+    }
+
+    .quiz-feedback.incorrect {
+      color: #ff7b72;
+      background: rgba(248, 81, 73, 0.12);
+      border-color: #da3633;
+    }
+
+    .quiz-feedback.notice {
+      color: #d29922;
+      background: rgba(187, 128, 9, 0.12);
+      border-color: #9e6a03;
+    }
+
+    .answer-correct {
+      background: rgba(46, 160, 67, 0.18) !important;
+      border-color: #2ea043 !important;
+    }
+
+    .answer-incorrect {
+      background: rgba(248, 81, 73, 0.18) !important;
+      border-color: #f85149 !important;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .locked-value {
+      color: #b7c2cf;
+      background: #252c35;
+      border: 1px dashed #59636e;
+      cursor: not-allowed;
+    }
+
+    #quizTable {
+      width: 100%;
+    }
+
+    #quizTable td:not(:first-child),
+    #quizTable th:not(:first-child) {
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      #quizTable {
+        min-width: 650px;
+      }
+    }
+    .flexy {
+        display: flex;
+        flex-direction: column;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="top-row">
+    <div>
+    <h1>Subnetting Quiz Mode</h1>
+
+    <p class="subtitle">
+      Practice converting between CIDR prefix lengths and subnet masks.
+    </p>
+    </div>
+    <div class="page-actions">
+    <a class="button-link secondary" href="index.html">
+          Return to Subnetting Page
+    </a>
+    </div>
+    </div>
+
+    <section class="table-card">
+      
+
+      <div class="quiz-controls">
+       
+          <div class="flexy">
+             <h2>Choose a quiz</h2>
+            <button id="startOnesQuiz" type="button" style="margin-bottom:5px">
+            CIDR to One Bits
+            </button>
+
+            <button id="startCidrQuiz" type="button" style="margin-bottom:5px">
+            Subnet Mask to CIDR
+            </button>
+
+            <button id="startRandomQuiz" type="button">
+                Random Quiz
+            </button>
+        </div>
+      
+      <div>
+        <table aria-label="binary breakdown" width="50%">
+        <tbody>
+          <tr>
+            <th><center># of bits</center></th>
+            <th>Binary</th>
+            <th>7</th>
+            <th>6</th>
+            <th>5</th>
+            <th>4</th>
+            <th>3</th>
+            <th>2</th>
+            <th>1</th>
+            <th>0</th>
+            <th>Sum</th>
+          </tr>
+          <tr>
+            <td><center>8</center></td><td>11111111</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td style="background: rgba(255, 255, 0, 0.2);">1</td><td>255</td>
+          </tr>
+          <tr>
+            <td><center>7</center></td><td>11111110</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td style="background: rgba(255, 255, 0, 0.2);">2</td><td></td><td>254</td>
+          </tr>
+          <tr>
+            <td><center>6</center></td><td>11111100</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td style="background: rgba(255, 255, 0, 0.2);">4</td><td></td><td></td><td>252</td>
+          </tr>
+          <tr>
+            <td><center>5</center></td><td>11111000</td><td>128</td><td>64</td><td>32</td><td>16</td><td style="background: rgba(255, 255, 0, 0.2);">8</td><td></td><td></td><td></td><td>248</td>
+          </tr>
+          <tr>
+            <td><center>4</center></td><td>11110000</td><td>128</td><td>64</td><td>32</td><td style="background: rgba(255, 255, 0, 0.2);">16</td><td></td><td></td><td></td><td></td><td>240</td>
+          </tr>
+          <tr>
+            <td><center>3</center></td><td>11100000</td><td>128</td><td>64</td><td style="background: rgba(255, 255, 0, 0.2);">32</td><td></td><td></td><td></td><td></td><td></td><td>224</td>
+          </tr>
+          <tr>
+            <td><center>2</center></td><td>11000000</td><td>128</td><td style="background: rgba(255, 255, 0, 0.2);">64</td><td></td><td></td><td></td><td></td><td></td><td></td><td>192</td>
+          </tr>
+          <tr>
+            <td><center>1</center></td><td>10000000</td><td style="background: rgba(255, 255, 0, 0.2);">128</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>128</td>
+          </tr>
+          <tr>
+            <td><center>0</center></td><td>00000000</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      </div>
+      <p id="quizDescription" class="quiz-description">
+        Select a quiz type to begin.
+      </p>
+    </section>
+
+    <section id="quizCard" class="table-card hidden">
+      <h2 id="quizTitle">Quiz</h2>
+
+      <!-- Quiz 1 prompt -->
+      <div id="cidrPromptContainer" class="hidden">
+        <p>
+          Fill in the number of one bits in each octet for:
+        </p>
+
+        <h2 class="quiz-cidr">
+          CIDR /
+          <input
+            id="lockedCidrInput"
+            class="locked-value"
+            type="number"
+            readonly
+            aria-label="Quiz CIDR prefix"
+          />
+        </h2>
+      </div>
+
+      <!-- Quiz 2 prompt -->
+      <div id="cidrAnswerContainer" class="hidden">
+        <p>
+          Enter the CIDR prefix represented by this subnet mask:
+        </p>
+
+        <label class="quiz-cidr">
+          CIDR /
+          <input
+            id="cidrAnswerInput"
+            class="cidr-answer-input"
+            type="number"
+            min="0"
+            max="32"
+            step="1"
+            inputmode="numeric"
+            autocomplete="off"
+            aria-label="CIDR answer"
+          />
+        </label>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table
+          id="quizTable"
+          aria-label="CIDR subnet mask quiz table"
+        >
+          <thead>
+            <tr>
+              <th scope="col">Format</th>
+              <th scope="col">First Octet</th>
+              <th scope="col">Second Octet</th>
+              <th scope="col">Third Octet</th>
+              <th scope="col">Fourth Octet</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr id="quizOnesRow">
+              <th scope="row">One Bits</th>
+
+              <td>
+                <input
+                  id="quiz-ones-0"
+                  class="ones-input"
+                  type="number"
+                  min="0"
+                  max="8"
+                  step="1"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  aria-label="First octet one bits"
+                />
+              </td>
+
+              <td>
+                <input
+                  id="quiz-ones-1"
+                  class="ones-input"
+                  type="number"
+                  min="0"
+                  max="8"
+                  step="1"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  aria-label="Second octet one bits"
+                />
+              </td>
+
+              <td>
+                <input
+                  id="quiz-ones-2"
+                  class="ones-input"
+                  type="number"
+                  min="0"
+                  max="8"
+                  step="1"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  aria-label="Third octet one bits"
+                />
+              </td>
+
+              <td>
+                <input
+                  id="quiz-ones-3"
+                  class="ones-input"
+                  type="number"
+                  min="0"
+                  max="8"
+                  step="1"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  aria-label="Fourth octet one bits"
+                />
+              </td>
+            </tr>
+
+            <tr id="quizBinaryRow">
+              <th scope="row">Binary (Step 1)</th>
+              <td id="quiz-binary-0"></td>
+              <td id="quiz-binary-1"></td>
+              <td id="quiz-binary-2"></td>
+              <td id="quiz-binary-3"></td>
+            </tr>
+
+            <tr>
+              <th scope="row">Decimal (Step 3)</th>
+              <td id="quiz-decimal-0"></td>
+              <td id="quiz-decimal-1"></td>
+              <td id="quiz-decimal-2"></td>
+              <td id="quiz-decimal-3"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quiz-actions">
+        <button id="checkAnswerButton" type="button">
+          Check Answer
+        </button>
+
+        <button
+          id="newQuestionButton"
+          class="secondary"
+          type="button"
+        >
+          New Question
+        </button>
+        <button id="startRandomQuiz2" type="button" class="secondary">
+                New Random Question
+            </button>
+      </div>
+
+      <div
+        id="quizFeedback"
+        class="quiz-feedback"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </section>
+        
+
+  </main>
+
+  <script src="quiz.js"></script>
+</body>
+</html>
