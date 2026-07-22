@@ -73,8 +73,8 @@
     }
 
     table {
-      width: 100%;
-      min-width: 760px;
+     
+      min-width: 500px;
       border-collapse: separate;
       border-spacing: 0;
       overflow: hidden;
@@ -84,7 +84,10 @@
 
     th,
     td {
-      padding: 12px 14px;
+      min-width: 20px;
+      padding: 1px;
+      padding-left: 5px;
+      padding-right: 5px;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       text-align: left;
@@ -182,7 +185,7 @@
 
       th,
       td {
-        padding: 10px;
+        padding: 0px;
       }
     }
 
@@ -194,7 +197,7 @@
     #binaryTable th,
     #binaryTable td {
         border: 1px solid #777;
-        padding: 6px;
+        padding: 0px;
         text-align: center;
     }
 
@@ -226,12 +229,16 @@
     }
     /* Javascript table changes */
     tbody th[scope="row"] {
-  background: linear-gradient(90deg, #202938, #1b2330);
-  color: var(--accent);
-  font-weight: 700;
-  text-align: left;
-  border-right: 2px solid var(--accent);
-}
+    background: linear-gradient(90deg, #202938, #1b2330);
+    color: var(--accent);
+    font-weight: 700;
+    text-align: left;
+    border-right: 2px solid var(--accent);
+    }
+    .flex {
+        display: flex;
+        flex-direction: row;
+    }
   </style>
 </head>
 <body>
@@ -248,13 +255,14 @@
         min="0"
         max="32"
         step="1"
-        value="28"
+        value="24"
         aria-label="CIDR prefix length"
         style="width:10px"
         >
     </h2>
-
-    <table aria-label="CIDR subnet mask summary">
+    <div class="flex">
+        <div>
+    <table aria-label="CIDR subnet mask summary" width="50%">
         <thead>
         <tr>
             <th scope="col">Format</th>
@@ -271,7 +279,7 @@
             <td id="ones-0">8</td>
             <td id="ones-1">8</td>
             <td id="ones-2">8</td>
-            <td id="ones-3">4</td>
+            <td id="ones-3">0</td>
         </tr>
 
         <tr>
@@ -279,7 +287,7 @@
             <td id="binary-0">11111111</td>
             <td id="binary-1">11111111</td>
             <td id="binary-2">11111111</td>
-            <td id="binary-3">11110000</td>
+            <td id="binary-3">00000000</td>
         </tr>
 
         <tr>
@@ -287,24 +295,17 @@
             <td id="decimal-0">255</td>
             <td id="decimal-1">255</td>
             <td id="decimal-2">255</td>
-            <td id="decimal-3">240</td>
+            <td id="decimal-3">0</td>
         </tr>
         </tbody>
     </table>
     <div id="maximum-possible-addresses"></div>
-    </section>
-
-
-    <section class="table-card">
-      <h2>Step 2</h2>
-      <div id="binaryTableContainer"></div>
-    </section>
-
-    <section class="table-card">
-      <table aria-label="Monthly performance table">
+    </div>
+    <div class="spacer" style="width: 20px;"></div>
+    <table aria-label="binary breakdown" width="50%">
         <tbody>
           <tr>
-            <th># of bits</th>
+            <th><center># of bits</center></th>
             <th>Binary</th>
             <th>7</th>
             <th>6</th>
@@ -317,34 +318,42 @@
             <th>Sum</th>
           </tr>
           <tr>
-            <td>8</td><td>11111111</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td style="background: rgba(255, 255, 0, 0.2);">1</td><td>255</td>
+            <td><center>8</center></td><td>11111111</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td style="background: rgba(255, 255, 0, 0.2);">1</td><td>255</td>
           </tr>
           <tr>
-            <td>7</td><td>11111110</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td style="background: rgba(255, 255, 0, 0.2);">2</td><td></td><td>254</td>
+            <td><center>7</center></td><td>11111110</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td style="background: rgba(255, 255, 0, 0.2);">2</td><td></td><td>254</td>
           </tr>
           <tr>
-            <td>6</td><td>11111100</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td style="background: rgba(255, 255, 0, 0.2);">4</td><td></td><td></td><td>252</td>
+            <td><center>6</center></td><td>11111100</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td style="background: rgba(255, 255, 0, 0.2);">4</td><td></td><td></td><td>252</td>
           </tr>
           <tr>
-            <td>5</td><td>11111000</td><td>128</td><td>64</td><td>32</td><td>16</td><td style="background: rgba(255, 255, 0, 0.2);">8</td><td></td><td></td><td></td><td>248</td>
+            <td><center>5</center></td><td>11111000</td><td>128</td><td>64</td><td>32</td><td>16</td><td style="background: rgba(255, 255, 0, 0.2);">8</td><td></td><td></td><td></td><td>248</td>
           </tr>
           <tr>
-            <td>4</td><td>11110000</td><td>128</td><td>64</td><td>32</td><td style="background: rgba(255, 255, 0, 0.2);">16</td><td></td><td></td><td></td><td></td><td>240</td>
+            <td><center>4</center></td><td>11110000</td><td>128</td><td>64</td><td>32</td><td style="background: rgba(255, 255, 0, 0.2);">16</td><td></td><td></td><td></td><td></td><td>240</td>
           </tr>
           <tr>
-            <td>3</td><td>11100000</td><td>128</td><td>64</td><td style="background: rgba(255, 255, 0, 0.2);">32</td><td></td><td></td><td></td><td></td><td></td><td>224</td>
+            <td><center>3</center></td><td>11100000</td><td>128</td><td>64</td><td style="background: rgba(255, 255, 0, 0.2);">32</td><td></td><td></td><td></td><td></td><td></td><td>224</td>
           </tr>
           <tr>
-            <td>2</td><td>11000000</td><td>128</td><td style="background: rgba(255, 255, 0, 0.2);">64</td><td></td><td></td><td></td><td></td><td></td><td></td><td>192</td>
+            <td><center>2</center></td><td>11000000</td><td>128</td><td style="background: rgba(255, 255, 0, 0.2);">64</td><td></td><td></td><td></td><td></td><td></td><td></td><td>192</td>
           </tr>
           <tr>
-            <td>1</td><td>10000000</td><td style="background: rgba(255, 255, 0, 0.2);">128</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>128</td>
+            <td><center>1</center></td><td>10000000</td><td style="background: rgba(255, 255, 0, 0.2);">128</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>128</td>
           </tr>
           <tr>
-            <td>0</td><td>00000000</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td>
+            <td><center>0</center></td><td>00000000</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td>
           </tr>
         </tbody>
       </table>
+    </div>
+    
+    </section>
+
+
+    <section class="table-card">
+      <h2>Step 2</h2>
+      <div id="binaryTableContainer"></div>
     </section>
   </main>
   <script src="script.js"></script>
