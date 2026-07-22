@@ -396,42 +396,45 @@ function createNewQuestion() {
  * Grade the CIDR-to-One-Bits quiz.
  */
 function checkOneBitsAnswer() {
+    // Fill in any blank inputs with 0 before grading.
+    onesInputs.forEach((input, octetIndex) => {
+        if (input.value.trim() === "") {
+            input.value = "0";
+
+            // Update the preview table immediately.
+            updateOctetFromOnesInput(octetIndex);
+        }
+    });
+
   const expectedValues =
     getOneBitsByOctet(quizState.answerCidr);
 
-  let allFieldsCompleted = true;
   let allCorrect = true;
 
   onesInputs.forEach((input, octetIndex) => {
-    input.classList.remove(
-      "answer-correct",
-      "answer-incorrect"
-    );
 
-    if (input.value === "") {
-      allFieldsCompleted = false;
-      allCorrect = false;
-      input.classList.add("answer-incorrect");
-      return;
-    }
+        input.classList.remove(
+            "answer-correct",
+            "answer-incorrect"
+        );
 
-    const userValue = clampOneBits(input.value);
-    const expectedValue = expectedValues[octetIndex];
+        const userValue =
+            input.value === ""
+                ? 0
+                : clampOneBits(input.value);
 
-    if (userValue === expectedValue) {
-      input.classList.add("answer-correct");
-    } else {
-      allCorrect = false;
-      input.classList.add("answer-incorrect");
-    }
+        const expectedValue = expectedValues[octetIndex];
+
+        if (userValue === expectedValue) {
+            input.classList.add("answer-correct");
+        } else {
+            allCorrect = false;
+            input.classList.add("answer-incorrect");
+        }
+
   });
 
-  if (!allFieldsCompleted) {
-    showFeedback(
-      "Enter a value for all four octets before checking.",
-      "incorrect"
-    );
-
+  if (!allCorrect) {
     return;
   }
 
