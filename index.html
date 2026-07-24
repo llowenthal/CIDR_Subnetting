@@ -1,134 +1,231 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subnetting</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <main>
-    <div class="top-row">
-    <div class="steps">
-        <div>Step 1: Convert the CIDR To Binary (Ones & Zeros), CIDR tells you how many Ones you have.</div>
-        <div>Step 2: Match the bulbs that are turned ON with the values they represent</div>
-        <div>Step 3: Replace the Binary with the Decimal numbers they represent (eg. 0, 255 etc)</div>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subnetting</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <div class="top-row">
+        <div class="steps">
+          <div>
+            Step 1: Convert the CIDR To Binary (Ones & Zeros), CIDR tells you
+            how many Ones you have.
+          </div>
+          <div>
+            Step 2: Match the bulbs that are turned ON with the values they
+            represent
+          </div>
+          <div>
+            Step 3: Replace the Binary with the Decimal numbers they represent
+            (eg. 0, 255 etc)
+          </div>
+        </div>
 
-    <div class="page-actions">
-        <a class="button-link" href="quiz.html">Quiz Mode</a>
-    </div>
-    </div>
-    <section class="table-card">
-    <h2>
-        CIDR /
-        <input
-        id="cidrInput"
-        type="number"
-        min="0"
-        max="32"
-        step="1"
-        value="24"
-        aria-label="CIDR prefix length"
-        style="width:10px"
-        >
-    </h2>
-    <div class="flex">
-        <div>
-    <table aria-label="CIDR subnet mask summary" width="50%">
-        <thead>
-        <tr>
-            <th scope="col">Format</th>
-            <th scope="col">First Octet</th>
-            <th scope="col">Second Octet</th>
-            <th scope="col">Third Octet</th>
-            <th scope="col">Fourth Octet</th>
-        </tr>
-        </thead>
+        <div class="page-actions">
+          <a class="button-link" href="quiz.html">Quiz Mode</a>
+        </div>
+      </div>
+      <section class="table-card">
+        <h2>
+          CIDR /
+          <input
+            id="cidrInput"
+            type="number"
+            min="0"
+            max="32"
+            step="1"
+            value="24"
+            aria-label="CIDR prefix length"
+            style="width: 10px"
+          />
+        </h2>
+        <div class="flex">
+          <div>
+            <table aria-label="CIDR subnet mask summary" width="50%">
+              <thead>
+                <tr>
+                  <th scope="col">Format</th>
+                  <th scope="col">First Octet</th>
+                  <th scope="col">Second Octet</th>
+                  <th scope="col">Third Octet</th>
+                  <th scope="col">Fourth Octet</th>
+                </tr>
+              </thead>
 
-        <tbody>
-        <tr>
-            <th scope="row">One Bits</th>
-            <td id="ones-0">8</td>
-            <td id="ones-1">8</td>
-            <td id="ones-2">8</td>
-            <td id="ones-3">0</td>
-        </tr>
+              <tbody>
+                <tr>
+                  <th scope="row">One Bits</th>
+                  <td id="ones-0">8</td>
+                  <td id="ones-1">8</td>
+                  <td id="ones-2">8</td>
+                  <td id="ones-3">0</td>
+                </tr>
 
-        <tr>
-            <th scope="row">Binary (Step 1)</th>
-            <td id="binary-0">11111111</td>
-            <td id="binary-1">11111111</td>
-            <td id="binary-2">11111111</td>
-            <td id="binary-3">00000000</td>
-        </tr>
+                <tr>
+                  <th scope="row">Binary (Step 1)</th>
+                  <td id="binary-0">11111111</td>
+                  <td id="binary-1">11111111</td>
+                  <td id="binary-2">11111111</td>
+                  <td id="binary-3">00000000</td>
+                </tr>
 
-        <tr>
-            <th scope="row">Decimal (Step 3)</th>
-            <td id="decimal-0">255</td>
-            <td id="decimal-1">255</td>
-            <td id="decimal-2">255</td>
-            <td id="decimal-3">0</td>
-        </tr>
-        </tbody>
-    </table>
-    <div id="maximum-possible-addresses"></div>
-    </div>
-    <div class="spacer" style="width: 20px;"></div>
-    <table aria-label="binary breakdown" width="50%">
-        <tbody>
-          <tr>
-            <th><center># of bits</center></th>
-            <th>Binary</th>
-            <th>7</th>
-            <th>6</th>
-            <th>5</th>
-            <th>4</th>
-            <th>3</th>
-            <th>2</th>
-            <th>1</th>
-            <th>0</th>
-            <th>Sum</th>
-          </tr>
-          <tr>
-            <td><center>8</center></td><td>11111111</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td style="background: rgba(255, 255, 0, 0.2);">1</td><td>255</td>
-          </tr>
-          <tr>
-            <td><center>7</center></td><td>11111110</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td style="background: rgba(255, 255, 0, 0.2);">2</td><td></td><td>254</td>
-          </tr>
-          <tr>
-            <td><center>6</center></td><td>11111100</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td style="background: rgba(255, 255, 0, 0.2);">4</td><td></td><td></td><td>252</td>
-          </tr>
-          <tr>
-            <td><center>5</center></td><td>11111000</td><td>128</td><td>64</td><td>32</td><td>16</td><td style="background: rgba(255, 255, 0, 0.2);">8</td><td></td><td></td><td></td><td>248</td>
-          </tr>
-          <tr>
-            <td><center>4</center></td><td>11110000</td><td>128</td><td>64</td><td>32</td><td style="background: rgba(255, 255, 0, 0.2);">16</td><td></td><td></td><td></td><td></td><td>240</td>
-          </tr>
-          <tr>
-            <td><center>3</center></td><td>11100000</td><td>128</td><td>64</td><td style="background: rgba(255, 255, 0, 0.2);">32</td><td></td><td></td><td></td><td></td><td></td><td>224</td>
-          </tr>
-          <tr>
-            <td><center>2</center></td><td>11000000</td><td>128</td><td style="background: rgba(255, 255, 0, 0.2);">64</td><td></td><td></td><td></td><td></td><td></td><td></td><td>192</td>
-          </tr>
-          <tr>
-            <td><center>1</center></td><td>10000000</td><td style="background: rgba(255, 255, 0, 0.2);">128</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>128</td>
-          </tr>
-          <tr>
-            <td><center>0</center></td><td>00000000</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    </section>
+                <tr>
+                  <th scope="row">Decimal (Step 3)</th>
+                  <td id="decimal-0">255</td>
+                  <td id="decimal-1">255</td>
+                  <td id="decimal-2">255</td>
+                  <td id="decimal-3">0</td>
+                </tr>
+              </tbody>
+            </table>
+            <div id="maximum-possible-addresses"></div>
+          </div>
+          <div class="spacer" style="width: 20px"></div>
+          <table aria-label="binary breakdown" width="50%">
+            <tbody>
+              <tr>
+                <th><center># of bits</center></th>
+                <th>Binary</th>
+                <th>7</th>
+                <th>6</th>
+                <th>5</th>
+                <th>4</th>
+                <th>3</th>
+                <th>2</th>
+                <th>1</th>
+                <th>0</th>
+                <th>Sum</th>
+              </tr>
+              <tr>
+                <td><center>8</center></td>
+                <td>11111111</td>
+                <td>128</td>
+                <td>64</td>
+                <td>32</td>
+                <td>16</td>
+                <td>8</td>
+                <td>4</td>
+                <td>2</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">1</td>
+                <td>255</td>
+              </tr>
+              <tr>
+                <td><center>7</center></td>
+                <td>11111110</td>
+                <td>128</td>
+                <td>64</td>
+                <td>32</td>
+                <td>16</td>
+                <td>8</td>
+                <td>4</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">2</td>
+                <td></td>
+                <td>254</td>
+              </tr>
+              <tr>
+                <td><center>6</center></td>
+                <td>11111100</td>
+                <td>128</td>
+                <td>64</td>
+                <td>32</td>
+                <td>16</td>
+                <td>8</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">4</td>
+                <td></td>
+                <td></td>
+                <td>252</td>
+              </tr>
+              <tr>
+                <td><center>5</center></td>
+                <td>11111000</td>
+                <td>128</td>
+                <td>64</td>
+                <td>32</td>
+                <td>16</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">8</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>248</td>
+              </tr>
+              <tr>
+                <td><center>4</center></td>
+                <td>11110000</td>
+                <td>128</td>
+                <td>64</td>
+                <td>32</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">16</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>240</td>
+              </tr>
+              <tr>
+                <td><center>3</center></td>
+                <td>11100000</td>
+                <td>128</td>
+                <td>64</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">32</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>224</td>
+              </tr>
+              <tr>
+                <td><center>2</center></td>
+                <td>11000000</td>
+                <td>128</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">64</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>192</td>
+              </tr>
+              <tr>
+                <td><center>1</center></td>
+                <td>10000000</td>
+                <td style="background: rgba(255, 255, 0, 0.2)">128</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>128</td>
+              </tr>
+              <tr>
+                <td><center>0</center></td>
+                <td>00000000</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-
-    <section class="table-card">
-      <h2>Step 2</h2>
-      <div id="binaryTableContainer"></div>
-    </section>
-  </main>
-  <script src="script.js"></script>
-</body>
+      <section class="table-card">
+        <h2>Step 2</h2>
+        <div id="binaryTableContainer"></div>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
 </html>

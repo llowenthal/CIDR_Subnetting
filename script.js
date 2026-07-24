@@ -87,10 +87,7 @@ function createBinaryTable() {
       // Position among all 32 subnet-mask bits.
       input.dataset.bitIndex = rowIndex * 8 + columnIndex;
 
-      input.setAttribute(
-        "aria-label",
-        `${rowName} octet, ${bitValue} bit`
-      );
+      input.setAttribute("aria-label", `${rowName} octet, ${bitValue} bit`);
 
       input.addEventListener("input", handleBitInput);
 
@@ -107,10 +104,7 @@ function createBinaryTable() {
     sumInput.classList.add("sum-input");
     sumInput.dataset.sumRow = rowIndex;
 
-    sumInput.setAttribute(
-      "aria-label",
-      `${rowName} octet decimal value`
-    );
+    sumInput.setAttribute("aria-label", `${rowName} octet decimal value`);
 
     sumCell.appendChild(sumInput);
     row.appendChild(sumCell);
@@ -129,9 +123,7 @@ function handleBitInput(event) {
   const changedInput = event.target;
 
   // Only permit one 0 or 1.
-  changedInput.value = changedInput.value
-    .replace(/[^01]/g, "")
-    .slice(0, 1);
+  changedInput.value = changedInput.value.replace(/[^01]/g, "").slice(0, 1);
 
   if (changedInput.value === "") {
     changedInput.value = "0";
@@ -147,9 +139,7 @@ function handleBitInput(event) {
    * Clicking a bit to 0 means the CIDR ends before that bit.
    */
   const newCidr =
-    changedInput.value === "1"
-      ? changedBitIndex + 1
-      : changedBitIndex;
+    changedInput.value === "1" ? changedBitIndex + 1 : changedBitIndex;
 
   setCidr(newCidr);
 }
@@ -171,7 +161,7 @@ function updateEditableBits(cidr) {
 function updateRowSums() {
   rowNames.forEach((_, rowIndex) => {
     const rowInputs = document.querySelectorAll(
-      `.bit-input[data-row="${rowIndex}"]`
+      `.bit-input[data-row="${rowIndex}"]`,
     );
 
     let sum = 0;
@@ -183,7 +173,7 @@ function updateRowSums() {
     });
 
     const sumInput = document.querySelector(
-      `.sum-input[data-sum-row="${rowIndex}"]`
+      `.sum-input[data-sum-row="${rowIndex}"]`,
     );
 
     sumInput.value = sum;
@@ -202,28 +192,17 @@ function updateCidrSummaryTable(cidr) {
   for (let octetIndex = 0; octetIndex < 4; octetIndex++) {
     const bitsBeforeOctet = octetIndex * 8;
 
-    const oneBits = Math.max(
-      0,
-      Math.min(8, cidr - bitsBeforeOctet)
-    );
+    const oneBits = Math.max(0, Math.min(8, cidr - bitsBeforeOctet));
 
-    const binary =
-      "1".repeat(oneBits) +
-      "0".repeat(8 - oneBits);
+    const binary = "1".repeat(oneBits) + "0".repeat(8 - oneBits);
 
     const decimal = parseInt(binary, 2);
 
-    const onesElement = document.getElementById(
-      `ones-${octetIndex}`
-    );
+    const onesElement = document.getElementById(`ones-${octetIndex}`);
 
-    const binaryElement = document.getElementById(
-      `binary-${octetIndex}`
-    );
+    const binaryElement = document.getElementById(`binary-${octetIndex}`);
 
-    const decimalElement = document.getElementById(
-      `decimal-${octetIndex}`
-    );
+    const decimalElement = document.getElementById(`decimal-${octetIndex}`);
 
     if (onesElement) {
       onesElement.textContent = oneBits;
@@ -244,9 +223,7 @@ cidrInput.addEventListener("input", () => {
 });
 
 function updateMaximumPossibleAddresses(cidr) {
-  const output = document.getElementById(
-    "maximum-possible-addresses"
-  );
+  const output = document.getElementById("maximum-possible-addresses");
 
   const hostBits = 32 - cidr;
   const totalAddresses = 2 ** hostBits;

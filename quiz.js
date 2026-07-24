@@ -1,165 +1,205 @@
+"use strict";
+
+const QUIZ_MODES = Object.freeze({
+  ONES_FROM_CIDR: "ones-from-cidr",
+  CIDR_FROM_MASK: "cidr-from-mask",
+  FULL_FROM_CIDR: "full-from-cidr",
+  RANDOM: "random",
+});
+
+const QUIZ_CONFIG = {
+  [QUIZ_MODES.ONES_FROM_CIDR]: {
+    title: "CIDR to One Bits",
+    description: "Enter the number of one bits in each octet.",
+    showCidrPrompt: true,
+    showCidrAnswer: false,
+    showOnesRow: true,
+    showMaskRow: false,
+    showBinaryRow: true,
+    showDecimalRow: true,
+    showTotalAddresses: false,
+  },
+
+  [QUIZ_MODES.CIDR_FROM_MASK]: {
+    title: "Subnet Mask to CIDR",
+    description: "Enter the CIDR prefix represented by the subnet mask.",
+    showCidrPrompt: false,
+    showCidrAnswer: true,
+    showOnesRow: false,
+    showMaskRow: false,
+    showBinaryRow: false,
+    showDecimalRow: true,
+    showTotalAddresses: false,
+  },
+
+  [QUIZ_MODES.FULL_FROM_CIDR]: {
+    title: "CIDR Full Calculation",
+    description:
+      "Enter the one-bit counts, subnet mask, and total IP addresses.",
+    showCidrPrompt: true,
+    showCidrAnswer: false,
+    showOnesRow: true,
+    showMaskRow: true,
+    showBinaryRow: false,
+    showDecimalRow: false,
+    showTotalAddresses: true,
+  },
+};
+
 const quizState = {
-  mode: null,
+  selectedMode: null,
+  currentQuestionMode: null,
   answerCidr: null,
-  answered: false
+
+  // POTENTIALLY UNNECESSARY:
+  // This value is assigned after a correct answer, but nothing currently
+  // checks it. Remove it unless you plan to lock completed questions,
+  // track scores, or prevent repeated submissions.
+  answered: false,
 };
 
-const QUIZ_MODES = {
-    ONES_FROM_CIDR: "ones-from-cidr",
-    CIDR_FROM_MASK: "cidr-from-mask",
-    RANDOM: "random"
+const elements = {
+  quizCard: document.getElementById("quizCard"),
+  quizTitle: document.getElementById("quizTitle"),
+  quizDescription: document.getElementById("quizDescription"),
+  quizFeedback: document.getElementById("quizFeedback"),
+
+  cidrPrompt: document.getElementById("cidrPromptContainer"),
+  cidrAnswerContainer: document.getElementById("cidrAnswerContainer"),
+  lockedCidrInput: document.getElementById("lockedCidrInput"),
+  cidrAnswerInput: document.getElementById("cidrAnswerInput"),
+
+  onesRow: document.getElementById("quizOnesRow"),
+  maskRow: document.getElementById("quizMaskAnswerRow"),
+  binaryRow: document.getElementById("quizBinaryRow"),
+  decimalRow: document.getElementById("quizDecimalRow"),
+  fullCidrAnswers: document.getElementById("fullCidrAnswers"),
+  totalIpAnswer: document.getElementById("usableIpAnswer"),
+
+  checkButton: document.getElementById("checkAnswerButton"),
+  newQuestionButton: document.getElementById("newQuestionButton"),
+
+  modeButtons: {
+    [QUIZ_MODES.ONES_FROM_CIDR]: document.getElementById("startOnesQuiz"),
+
+    [QUIZ_MODES.CIDR_FROM_MASK]: document.getElementById("startCidrQuiz"),
+
+    [QUIZ_MODES.FULL_FROM_CIDR]: document.getElementById("startFullCidrQuiz"),
+  },
+
+  randomButtons: [
+    document.getElementById("startRandomQuiz"),
+    document.getElementById("startRandomQuiz2"),
+  ],
+
+  onesInputs: [...document.querySelectorAll(".ones-input")],
+
+  maskInputs: [...document.querySelectorAll(".mask-answer-input")],
+
+  binaryCells: Array.from({ length: 4 }, (_, index) =>
+    document.getElementById(`quiz-binary-${index}`),
+  ),
+
+  decimalCells: Array.from({ length: 4 }, (_, index) =>
+    document.getElementById(`quiz-decimal-${index}`),
+  ),
 };
 
-const startRandomQuizButton =
-    document.getElementById("startRandomQuiz");
-
-const startRandomQuizButton2 =
-    document.getElementById("startRandomQuiz2");    
-
-const startOnesQuizButton =
-  document.getElementById("startOnesQuiz");
-
-const startCidrQuizButton =
-  document.getElementById("startCidrQuiz");
-
-const quizCard =
-  document.getElementById("quizCard");
-
-const quizTitle =
-  document.getElementById("quizTitle");
-
-const quizDescription =
-  document.getElementById("quizDescription");
-
-const cidrPromptContainer =
-  document.getElementById("cidrPromptContainer");
-
-const cidrAnswerContainer =
-  document.getElementById("cidrAnswerContainer");
-
-const lockedCidrInput =
-  document.getElementById("lockedCidrInput");
-
-const cidrAnswerInput =
-  document.getElementById("cidrAnswerInput");
-
-const quizOnesRow =
-  document.getElementById("quizOnesRow");
-
-const quizBinaryRow =
-  document.getElementById("quizBinaryRow");
-
-const checkAnswerButton =
-  document.getElementById("checkAnswerButton");
-
-const newQuestionButton =
-  document.getElementById("newQuestionButton");
-
-const quizFeedback =
-  document.getElementById("quizFeedback");
-
-const onesInputs = Array.from(
-  document.querySelectorAll(".ones-input")
-);
-
-/**
- * Generate a random integer from min through max,
- * including both endpoints.
- */
 function randomInteger(min, max) {
-  return Math.floor(
-    Math.random() * (max - min + 1)
-  ) + min;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/**
- * Generate any valid CIDR prefix from /0 through /32.
- */
 function generateRandomCidr() {
   return randomInteger(0, 32);
 }
 
-/**
- * Return the expected one-bit count for one octet.
- *
- * Examples:
- *
- * /4  => [4, 0, 0, 0]
- * /16 => [8, 8, 0, 0]
- * /27 => [8, 8, 8, 3]
- */
 function getOneBitsByOctet(cidr) {
-  return [0, 1, 2, 3].map((octetIndex) => {
-    const bitsBeforeOctet = octetIndex * 8;
-
-    return Math.max(
-      0,
-      Math.min(8, cidr - bitsBeforeOctet)
-    );
+  return Array.from({ length: 4 }, (_, octetIndex) => {
+    const remainingBits = cidr - octetIndex * 8;
+    return Math.max(0, Math.min(8, remainingBits));
   });
 }
 
-/**
- * Convert a count of one bits into an 8-bit binary string.
- *
- * 0 => 00000000
- * 3 => 11100000
- * 8 => 11111111
- */
-function oneBitsToBinary(oneBits) {
-  const validOneBits = clampOneBits(oneBits);
-
-  return (
-    "1".repeat(validOneBits) +
-    "0".repeat(8 - validOneBits)
-  );
-}
-
-/**
- * Convert a one-bit count into the corresponding decimal
- * subnet mask octet.
- *
- * 0 => 0
- * 1 => 128
- * 2 => 192
- * 8 => 255
- */
-function oneBitsToDecimal(oneBits) {
-  return parseInt(oneBitsToBinary(oneBits), 2);
-}
-
-/**
- * Guarantee that a one-bit value stays between 0 and 8.
- */
 function clampOneBits(value) {
-  const numericValue = Number(value);
+  const number = Number(value);
 
-  if (!Number.isFinite(numericValue)) {
+  if (!Number.isFinite(number)) {
     return 0;
   }
 
-  return Math.max(
-    0,
-    Math.min(8, Math.trunc(numericValue))
-  );
+  return Math.max(0, Math.min(8, Math.trunc(number)));
 }
 
-/**
- * Update one binary and decimal table cell using the value
- * currently entered in a One Bits input.
- */
-function updateOctetFromOnesInput(octetIndex) {
-  const input = onesInputs[octetIndex];
-  const binaryCell =
-    document.getElementById(`quiz-binary-${octetIndex}`);
+function oneBitsToBinary(oneBits) {
+  const normalizedBits = clampOneBits(oneBits);
 
-  const decimalCell =
-    document.getElementById(`quiz-decimal-${octetIndex}`);
+  return "1".repeat(normalizedBits) + "0".repeat(8 - normalizedBits);
+}
 
-  /*
-   * While the field is blank, show placeholders rather than
-   * immediately forcing the user-entered value to zero.
-   */
+function oneBitsToDecimal(oneBits) {
+  return Number.parseInt(oneBitsToBinary(oneBits), 2);
+}
+
+function getTotalAddressCount(cidr) {
+  return 2 ** (32 - cidr);
+}
+
+// POTENTIALLY UNNECESSARY:
+// This quiz currently asks for total addresses, not traditionally usable
+// host addresses. Add this function back only if another quiz needs it:
+//
+// function getUsableAddressCount(cidr) {
+//   return cidr >= 31 ? 0 : getTotalAddressCount(cidr) - 2;
+// }
+
+function setHidden(element, shouldHide) {
+  element.classList.toggle("hidden", shouldHide);
+}
+
+function showFeedback(message, type) {
+  elements.quizFeedback.textContent = message;
+  elements.quizFeedback.className = `quiz-feedback ${type}`;
+}
+
+function clearFeedback() {
+  elements.quizFeedback.textContent = "";
+  elements.quizFeedback.className = "quiz-feedback";
+}
+
+function getAllAnswerInputs() {
+  return [
+    ...elements.onesInputs,
+    ...elements.maskInputs,
+    elements.cidrAnswerInput,
+    elements.totalIpAnswer,
+  ];
+}
+
+function clearAnswerInputs() {
+  getAllAnswerInputs().forEach((input) => {
+    input.value = "";
+  });
+}
+
+function clearAnswerStyles() {
+  getAllAnswerInputs().forEach((input) => {
+    input.classList.remove("answer-correct", "answer-incorrect");
+  });
+}
+
+function fillBlankInputsWithZero(inputs) {
+  inputs.forEach((input) => {
+    if (input.value.trim() === "") {
+      input.value = "0";
+    }
+  });
+}
+
+function updateOctetPreview(octetIndex) {
+  const input = elements.onesInputs[octetIndex];
+  const binaryCell = elements.binaryCells[octetIndex];
+  const decimalCell = elements.decimalCells[octetIndex];
+
   if (input.value === "") {
     binaryCell.textContent = "--------";
     decimalCell.textContent = "—";
@@ -172,18 +212,264 @@ function updateOctetFromOnesInput(octetIndex) {
   decimalCell.textContent = oneBitsToDecimal(oneBits);
 }
 
-/**
- * Handle typing in a One Bits field.
- *
- * Values below zero become 0.
- * Values above eight become 8.
- * Decimal values are changed to whole numbers.
- */
+function resetOctetPreviews() {
+  elements.binaryCells.forEach((cell) => {
+    cell.textContent = "--------";
+  });
+
+  elements.decimalCells.forEach((cell) => {
+    cell.textContent = "—";
+  });
+}
+
+function displaySubnetMask(cidr) {
+  const oneBitsByOctet = getOneBitsByOctet(cidr);
+
+  oneBitsByOctet.forEach((oneBits, octetIndex) => {
+    elements.binaryCells[octetIndex].textContent = oneBitsToBinary(oneBits);
+
+    elements.decimalCells[octetIndex].textContent = oneBitsToDecimal(oneBits);
+  });
+}
+
+function setSelectedModeButton(selectedMode) {
+  Object.entries(elements.modeButtons).forEach(([mode, button]) => {
+    button.classList.toggle("selected-mode", mode === selectedMode);
+  });
+
+  // POTENTIALLY UNNECESSARY:
+  // The Random Quiz buttons do not receive selected-mode styling.
+  // That is fine unless you want Random Quiz to remain visibly selected.
+}
+
+function applyQuestionLayout(mode) {
+  const config = QUIZ_CONFIG[mode];
+
+  elements.quizTitle.textContent = config.title;
+  elements.quizDescription.textContent = config.description;
+
+  setHidden(elements.cidrPrompt, !config.showCidrPrompt);
+  setHidden(elements.cidrAnswerContainer, !config.showCidrAnswer);
+  setHidden(elements.onesRow, !config.showOnesRow);
+  setHidden(elements.maskRow, !config.showMaskRow);
+  setHidden(elements.binaryRow, !config.showBinaryRow);
+  setHidden(elements.decimalRow, !config.showDecimalRow);
+  setHidden(elements.fullCidrAnswers, !config.showTotalAddresses);
+}
+
+function getRandomQuestionMode() {
+  const modes = Object.keys(QUIZ_CONFIG);
+
+  return modes[randomInteger(0, modes.length - 1)];
+}
+
+function selectQuizMode(mode) {
+  quizState.selectedMode = mode;
+
+  setSelectedModeButton(mode);
+  elements.quizCard.classList.remove("hidden");
+
+  createNewQuestion();
+}
+
+function createNewQuestion() {
+  const mode =
+    quizState.selectedMode === QUIZ_MODES.RANDOM
+      ? getRandomQuestionMode()
+      : quizState.selectedMode;
+
+  if (!QUIZ_CONFIG[mode]) {
+    return;
+  }
+
+  quizState.currentQuestionMode = mode;
+  quizState.answerCidr = generateRandomCidr();
+  quizState.answered = false;
+
+  clearAnswerInputs();
+  clearAnswerStyles();
+  clearFeedback();
+  applyQuestionLayout(mode);
+
+  elements.lockedCidrInput.value = quizState.answerCidr;
+
+  if (mode === QUIZ_MODES.CIDR_FROM_MASK) {
+    displaySubnetMask(quizState.answerCidr);
+    elements.cidrAnswerInput.focus();
+    return;
+  }
+
+  if (mode === QUIZ_MODES.ONES_FROM_CIDR) {
+    resetOctetPreviews();
+  }
+
+  elements.onesInputs[0].focus();
+}
+
+function gradeInputs(inputs, expectedValues, normalizeAnswer = Number) {
+  let allCorrect = true;
+
+  inputs.forEach((input, index) => {
+    const userAnswer = normalizeAnswer(input.value);
+    const isCorrect = userAnswer === expectedValues[index];
+
+    input.classList.toggle("answer-correct", isCorrect);
+    input.classList.toggle("answer-incorrect", !isCorrect);
+
+    if (!isCorrect) {
+      allCorrect = false;
+    }
+  });
+
+  return allCorrect;
+}
+
+function checkOneBitsAnswer() {
+  fillBlankInputsWithZero(elements.onesInputs);
+
+  elements.onesInputs.forEach((_, index) => {
+    updateOctetPreview(index);
+  });
+
+  const expectedOneBits = getOneBitsByOctet(quizState.answerCidr);
+
+  const allCorrect = gradeInputs(
+    elements.onesInputs,
+    expectedOneBits,
+    clampOneBits,
+  );
+
+  if (!allCorrect) {
+    showFeedback(
+      "Not quite. Red fields are incorrect. " +
+        "You can change them and check again.",
+      "incorrect",
+    );
+    return;
+  }
+
+  quizState.answered = true;
+
+  const subnetMask = expectedOneBits.map(oneBitsToDecimal).join(".");
+
+  showFeedback(
+    `Correct. /${quizState.answerCidr} equals ${subnetMask}.`,
+    "correct",
+  );
+}
+
+function checkCidrAnswer() {
+  const rawAnswer = elements.cidrAnswerInput.value.trim();
+  const userAnswer = Number(rawAnswer);
+
+  const isValid =
+    rawAnswer !== "" &&
+    Number.isInteger(userAnswer) &&
+    userAnswer >= 0 &&
+    userAnswer <= 32;
+
+  elements.cidrAnswerInput.classList.remove(
+    "answer-correct",
+    "answer-incorrect",
+  );
+
+  if (!isValid) {
+    elements.cidrAnswerInput.classList.add("answer-incorrect");
+
+    showFeedback(
+      "The CIDR prefix must be a whole number from 0 through 32.",
+      "incorrect",
+    );
+    return;
+  }
+
+  const isCorrect = userAnswer === quizState.answerCidr;
+
+  elements.cidrAnswerInput.classList.add(
+    isCorrect ? "answer-correct" : "answer-incorrect",
+  );
+
+  if (!isCorrect) {
+    showFeedback(
+      `Incorrect. /${userAnswer} does not match this subnet mask.`,
+      "incorrect",
+    );
+    return;
+  }
+
+  quizState.answered = true;
+
+  showFeedback(
+    `Correct. The subnet mask is /${quizState.answerCidr}.`,
+    "correct",
+  );
+}
+
+function checkFullCidrAnswer() {
+  fillBlankInputsWithZero([
+    ...elements.onesInputs,
+    ...elements.maskInputs,
+    elements.totalIpAnswer,
+  ]);
+
+  const expectedOneBits = getOneBitsByOctet(quizState.answerCidr);
+
+  const expectedMask = expectedOneBits.map(oneBitsToDecimal);
+
+  const expectedTotal = getTotalAddressCount(quizState.answerCidr);
+
+  const onesCorrect = gradeInputs(
+    elements.onesInputs,
+    expectedOneBits,
+    clampOneBits,
+  );
+
+  const maskCorrect = gradeInputs(elements.maskInputs, expectedMask, Number);
+
+  const userTotal = Number(elements.totalIpAnswer.value);
+
+  const totalCorrect =
+    Number.isInteger(userTotal) && userTotal === expectedTotal;
+
+  elements.totalIpAnswer.classList.toggle("answer-correct", totalCorrect);
+
+  elements.totalIpAnswer.classList.toggle("answer-incorrect", !totalCorrect);
+
+  if (!onesCorrect || !maskCorrect || !totalCorrect) {
+    showFeedback(
+      "Not quite. The incorrect answers are highlighted in red.",
+      "incorrect",
+    );
+    return;
+  }
+
+  quizState.answered = true;
+
+  showFeedback(
+    `Correct. /${quizState.answerCidr} is ` +
+      `${expectedMask.join(".")} with ` +
+      `${expectedTotal.toLocaleString()} total IP addresses.`,
+    "correct",
+  );
+}
+
+function checkAnswer() {
+  const handlers = {
+    [QUIZ_MODES.ONES_FROM_CIDR]: checkOneBitsAnswer,
+
+    [QUIZ_MODES.CIDR_FROM_MASK]: checkCidrAnswer,
+
+    [QUIZ_MODES.FULL_FROM_CIDR]: checkFullCidrAnswer,
+  };
+
+  handlers[quizState.currentQuestionMode]?.();
+}
+
 function handleOneBitsInput(event) {
   const input = event.currentTarget;
   const octetIndex = Number(input.dataset.octet);
 
-  clearInputAnswerStyles();
+  clearAnswerStyles();
 
   if (input.value !== "") {
     const originalValue = Number(input.value);
@@ -194,399 +480,80 @@ function handleOneBitsInput(event) {
 
       showFeedback(
         "Each octet can contain only 0 through 8 one bits. " +
-        `The value was changed to ${clampedValue}.`,
-        "notice"
+          `The value was changed to ${clampedValue}.`,
+        "notice",
       );
     } else {
       clearFeedback();
     }
   }
 
-  updateOctetFromOnesInput(octetIndex);
-}
-
-/**
- * Fill the decimal subnet-mask row from a CIDR prefix.
- */
-function displaySubnetMask(cidr) {
-  const expectedOneBits = getOneBitsByOctet(cidr);
-
-  expectedOneBits.forEach((oneBits, octetIndex) => {
-    document.getElementById(
-      `quiz-binary-${octetIndex}`
-    ).textContent = oneBitsToBinary(oneBits);
-
-    document.getElementById(
-      `quiz-decimal-${octetIndex}`
-    ).textContent = oneBitsToDecimal(oneBits);
-  });
-}
-
-/**
- * Clear all editable answer fields.
- */
-function clearAnswerInputs() {
-  onesInputs.forEach((input) => {
-    input.value = "";
-  });
-
-  cidrAnswerInput.value = "";
-}
-
-/**
- * Remove green and red answer highlighting.
- */
-function clearInputAnswerStyles() {
-  onesInputs.forEach((input) => {
-    input.classList.remove(
-      "answer-correct",
-      "answer-incorrect"
-    );
-  });
-
-  cidrAnswerInput.classList.remove(
-    "answer-correct",
-    "answer-incorrect"
-  );
-}
-
-/**
- * Display a status message.
- */
-function showFeedback(message, type) {
-  quizFeedback.textContent = message;
-  quizFeedback.className = `quiz-feedback ${type}`;
-}
-
-/**
- * Remove the current status message.
- */
-function clearFeedback() {
-  quizFeedback.textContent = "";
-  quizFeedback.className = "quiz-feedback";
-}
-
-/**
- * Select one of the two quiz modes.
- */
-function selectQuizMode(mode) {
-  quizState.currentQuestionMode = mode;
-
-  startOnesQuizButton.classList.toggle(
-    "selected-mode",
-    mode === QUIZ_MODES.ONES_FROM_CIDR
-  );
-
-  startCidrQuizButton.classList.toggle(
-    "selected-mode",
-    mode === QUIZ_MODES.CIDR_FROM_MASK
-  );
-
-  quizCard.classList.remove("hidden");
-
-  if (mode === QUIZ_MODES.ONES_FROM_CIDR) {
-    quizTitle.textContent = "CIDR to One Bits";
-
-    quizDescription.textContent =
-      "A CIDR prefix will be generated. Enter the number " +
-      "of one bits in each octet.";
-
-    cidrPromptContainer.classList.remove("hidden");
-    cidrAnswerContainer.classList.add("hidden");
-
-    quizOnesRow.classList.remove("hidden");
-    quizBinaryRow.classList.remove("hidden");
-  } else {
-    quizTitle.textContent = "Subnet Mask to CIDR";
-
-    quizDescription.textContent =
-      "A subnet mask will be generated. Enter its CIDR " +
-      "prefix length.";
-
-    cidrPromptContainer.classList.add("hidden");
-    cidrAnswerContainer.classList.remove("hidden");
-
-    /*
-     * The One Bits and Binary rows are hidden for this quiz.
-     */
-    quizOnesRow.classList.add("hidden");
-    quizBinaryRow.classList.add("hidden");
-  }
-
-  startRandomQuizButton.classList.toggle(
-    "selected-mode",
-    mode === QUIZ_MODES.RANDOM
- );
-
-  createNewQuestion();
-}
-
-/**
- * Generate a new question for the selected quiz mode.
- */
-function createNewQuestion() {
-
-    // If Random mode is selected,
-    // decide which quiz to generate.
-    let currentMode = quizState.currentQuestionMode;
-
-    if (currentMode === QUIZ_MODES.RANDOM) {
-        currentMode =
-            Math.random() < 0.5
-                ? QUIZ_MODES.ONES_FROM_CIDR
-                : QUIZ_MODES.CIDR_FROM_MASK;
-    }
-
-    quizState.currentQuestionMode = currentMode;
-
-    if (currentMode === QUIZ_MODES.ONES_FROM_CIDR) {
-        quizTitle.textContent = "Random • CIDR → One Bits";
-
-        cidrPromptContainer.classList.remove("hidden");
-        cidrAnswerContainer.classList.add("hidden");
-
-        quizOnesRow.classList.remove("hidden");
-        quizBinaryRow.classList.remove("hidden");
-    }
-    else {
-        quizTitle.textContent = "Random • Subnet Mask → CIDR";
-
-        cidrPromptContainer.classList.add("hidden");
-        cidrAnswerContainer.classList.remove("hidden");
-
-        quizOnesRow.classList.add("hidden");
-        quizBinaryRow.classList.add("hidden");
-    }
-
-    quizState.answerCidr = generateRandomCidr();
-    quizState.answered = false;
-
-    clearAnswerInputs();
-    clearInputAnswerStyles();
-    clearFeedback();
-
   if (quizState.currentQuestionMode === QUIZ_MODES.ONES_FROM_CIDR) {
-    lockedCidrInput.value = quizState.answerCidr;
-
-    /*
-     * Do not reveal the expected mask. The binary and decimal
-     * values will appear as the student fills out each field.
-     */
-    for (let octetIndex = 0; octetIndex < 4; octetIndex++) {
-      document.getElementById(
-        `quiz-binary-${octetIndex}`
-      ).textContent = "--------";
-
-      document.getElementById(
-        `quiz-decimal-${octetIndex}`
-      ).textContent = "—";
-    }
-
-    onesInputs[0].focus();
-  } else {
-    /*
-     * Only the decimal row is visible in this quiz.
-     */
-    displaySubnetMask(quizState.answerCidr);
-    cidrAnswerInput.focus();
+    updateOctetPreview(octetIndex);
   }
 }
 
-/**
- * Grade the CIDR-to-One-Bits quiz.
- */
-function checkOneBitsAnswer() {
-    // Fill in any blank inputs with 0 before grading.
-    onesInputs.forEach((input, octetIndex) => {
-        if (input.value.trim() === "") {
-            input.value = "0";
+function configureInputs() {
+  elements.onesInputs.forEach((input, octetIndex) => {
+    input.dataset.octet = String(octetIndex);
 
-            // Update the preview table immediately.
-            updateOctetFromOnesInput(octetIndex);
-        }
-    });
+    input.addEventListener("input", handleOneBitsInput);
 
-  const expectedValues =
-    getOneBitsByOctet(quizState.answerCidr);
+    input.addEventListener("blur", () => {
+      if (input.value === "") {
+        return;
+      }
 
-  let allCorrect = true;
-
-  onesInputs.forEach((input, octetIndex) => {
-
-        input.classList.remove(
-            "answer-correct",
-            "answer-incorrect"
-        );
-
-        const userValue =
-            input.value === ""
-                ? 0
-                : clampOneBits(input.value);
-
-        const expectedValue = expectedValues[octetIndex];
-
-        if (userValue === expectedValue) {
-            input.classList.add("answer-correct");
-        } else {
-            allCorrect = false;
-            input.classList.add("answer-incorrect");
-        }
-
-  });
-
-  if (!allCorrect) {
-    return;
-  }
-
-  if (allCorrect) {
-    quizState.answered = true;
-
-    const subnetMask = expectedValues
-      .map(oneBitsToDecimal)
-      .join(".");
-
-    showFeedback(
-      `Correct. /${quizState.answerCidr} equals ${subnetMask}.`,
-      "correct"
-    );
-  } else {
-    showFeedback(
-      "Not quite. Red fields are incorrect. " +
-      "You can change them and check again.",
-      "incorrect"
-    );
-  }
-}
-
-/**
- * Grade the subnet-mask-to-CIDR quiz.
- */
-function checkCidrAnswer() {
-  const rawAnswer = cidrAnswerInput.value.trim();
-
-  cidrAnswerInput.classList.remove(
-    "answer-correct",
-    "answer-incorrect"
-  );
-
-  if (rawAnswer === "") {
-    cidrAnswerInput.classList.add("answer-incorrect");
-
-    showFeedback(
-      "Enter a CIDR prefix before checking.",
-      "incorrect"
-    );
-
-    return;
-  }
-
-  const userAnswer = Number(rawAnswer);
-
-  if (
-    !Number.isInteger(userAnswer) ||
-    userAnswer < 0 ||
-    userAnswer > 32
-  ) {
-    cidrAnswerInput.classList.add("answer-incorrect");
-
-    showFeedback(
-      "The CIDR prefix must be a whole number from 0 through 32.",
-      "incorrect"
-    );
-
-    return;
-  }
-
-  if (userAnswer === quizState.answerCidr) {
-    quizState.answered = true;
-    cidrAnswerInput.classList.add("answer-correct");
-
-    showFeedback(
-      `Correct. The subnet mask is /${quizState.answerCidr}.`,
-      "correct"
-    );
-  } else {
-    cidrAnswerInput.classList.add("answer-incorrect");
-
-    showFeedback(
-      `Incorrect. ${userAnswer} does not match this subnet mask.`,
-      "incorrect"
-    );
-  }
-}
-
-/**
- * Grade the active quiz.
- */
-function checkAnswer() {
-  if (quizState.currentQuestionMode === QUIZ_MODES.ONES_FROM_CIDR) {
-    checkOneBitsAnswer();
-    return;
-  }
-
-  if (quizState.currentQuestionMode === QUIZ_MODES.CIDR_FROM_MASK) {
-    checkCidrAnswer();
-  }
-}
-
-/*
- * Configure the four One Bits inputs.
- */
-onesInputs.forEach((input, octetIndex) => {
-  input.dataset.octet = octetIndex;
-
-  input.addEventListener("input", handleOneBitsInput);
-
-  input.addEventListener("blur", () => {
-    /*
-     * A blank field remains blank so the grader can identify
-     * it as unanswered.
-     */
-    if (input.value !== "") {
       input.value = String(clampOneBits(input.value));
-      updateOctetFromOnesInput(octetIndex);
-    }
+
+      if (quizState.currentQuestionMode === QUIZ_MODES.ONES_FROM_CIDR) {
+        updateOctetPreview(octetIndex);
+      }
+    });
   });
-});
 
-startOnesQuizButton.addEventListener("click", () => {
-  selectQuizMode(QUIZ_MODES.ONES_FROM_CIDR);
-});
+  elements.cidrAnswerInput.addEventListener("input", () => {
+    elements.cidrAnswerInput.classList.remove(
+      "answer-correct",
+      "answer-incorrect",
+    );
 
-startCidrQuizButton.addEventListener("click", () => {
-  selectQuizMode(QUIZ_MODES.CIDR_FROM_MASK);
-});
+    clearFeedback();
+  });
+}
 
-checkAnswerButton.addEventListener("click", checkAnswer);
+function configureButtons() {
+  Object.entries(elements.modeButtons).forEach(([mode, button]) => {
+    button.addEventListener("click", () => {
+      selectQuizMode(mode);
+    });
+  });
 
-newQuestionButton.addEventListener("click", createNewQuestion);
+  elements.randomButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      selectQuizMode(QUIZ_MODES.RANDOM);
+    });
+  });
 
-startRandomQuizButton.addEventListener("click", () => {
-    selectQuizMode(QUIZ_MODES.RANDOM);
-});
+  elements.checkButton.addEventListener("click", checkAnswer);
 
-startRandomQuizButton2.addEventListener("click", () => {
-    selectQuizMode(QUIZ_MODES.RANDOM);
-});
+  elements.newQuestionButton.addEventListener("click", createNewQuestion);
+}
 
-cidrAnswerInput.addEventListener("input", () => {
-  cidrAnswerInput.classList.remove(
-    "answer-correct",
-    "answer-incorrect"
-  );
+function initializeQuiz() {
+  configureInputs();
+  configureButtons();
 
-  clearFeedback();
-});
+  document.addEventListener("keydown", (event) => {
+    const quizIsHidden = elements.quizCard.classList.contains("hidden");
 
-/*
- * Allow Enter to submit either quiz.
- */
-document.addEventListener("keydown", (event) => {
-  if (
-    event.key === "Enter" &&
-    !quizCard.classList.contains("hidden")
-  ) {
+    if (event.key !== "Enter" || quizIsHidden) {
+      return;
+    }
+
     event.preventDefault();
     checkAnswer();
-  }
-});
+  });
+}
+
+initializeQuiz();
